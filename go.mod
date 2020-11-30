@@ -1,4 +1,4 @@
-module github.com/ipfs/go-block-format
+module github.com/JoaoSilvestre95/go-block-format
 
 require (
 	github.com/ipfs/go-cid v0.0.5
