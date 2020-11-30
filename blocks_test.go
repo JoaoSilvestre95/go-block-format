@@ -96,3 +96,49 @@ func TestManualHash(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+
+func TestBlocksDataProcessed(t *testing.T) {
+	// Test empty data
+	empty := []byte{}
+	basicBlock := NewBlock(empty)
+	NewProcessedBlock(basicBlock, empty)
+
+	// Test nil case
+	NewProcessedBlock(basicBlock, nil)
+
+	// Test some data
+	notEmpty := []byte("Random text")
+	basicBlock = NewBlock(notEmpty)
+	NewProcessedBlock(basicBlock, notEmpty)
+}
+
+
+func TestProcessed(t *testing.T) {
+	data := []byte("some data")
+	block := NewBlock(data)
+	// Unprocessed data and processed data are the same
+	processedBlock := NewProcessedBlock(block, data)
+
+	if !bytes.Equal(processedBlock.RawData(), data) {
+		t.Error("data is wrong")
+	}
+}
+
+func TestProcessedWithCid(t *testing.T){
+	data := []byte("some data")
+	hash, err := mh.Sum(data, mh.SHA2_256, -1)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	c := cid.NewCidV0(hash)
+
+	block := NewBlock(data)
+
+	u.Debug = true
+	_, err = NewProcessedBlockWithCid(block, data, c)
+	if err != nil {
+		t.Fatal(err)
+	}
+}

@@ -31,6 +31,70 @@ type BasicBlock struct {
 	data []byte
 }
 
+type DataProcessedBlock struct {
+	basicBlock *BasicBlock // Unprocessed block
+	cid cid.Cid // Processed block cid
+	processedData []byte // Processed raw data
+}
+
+//RawData Get raw processed data
+func (dpb *DataProcessedBlock) RawData() []byte {
+	return dpb.processedData
+}
+
+//Cid Get processed block cid
+func (dpb *DataProcessedBlock) Cid() cid.Cid {
+	return dpb.cid
+}
+
+// String provides a human-readable representation of the processed block CID.
+func (dpb *DataProcessedBlock) String() string {
+	return fmt.Sprintf("[Block %s]", dpb.Cid())
+}
+
+// Loggable returns a go-log loggable item.
+func (dpb *DataProcessedBlock) Loggable() map[string]interface{} {
+	return map[string]interface{}{
+		"processed_block": dpb.Cid().String(),
+	}
+}
+
+func (dpb *DataProcessedBlock) GetBasicBlock() *BasicBlock {
+	return dpb.basicBlock
+}
+
+// NewProcessedBlock creates a DataProcessedBlock object from processed data. It will hash the data.
+func NewProcessedBlock(b *BasicBlock, processedData []byte) *DataProcessedBlock {
+	return &DataProcessedBlock{
+		basicBlock: b,
+		cid: cid.NewCidV0(u.Hash(processedData)),
+		processedData: processedData,
+	}
+}
+
+
+// NewProcessedBlockWithCid creates a new block when the hash of the data
+// is already known, this is used to save time in situations where
+// we are able to be confident that the data is correct.
+func NewProcessedBlockWithCid(b *BasicBlock, processedData []byte, c cid.Cid) (*DataProcessedBlock, error) {
+	if u.Debug {
+		chkc, err := c.Prefix().Sum(processedData)
+		if err != nil {
+			return nil, err
+		}
+
+		if !chkc.Equals(c) {
+			return nil, ErrWrongHash
+		}
+	}
+	return &DataProcessedBlock{
+		basicBlock: b,
+		cid: c,
+		processedData: processedData,
+	}, nil
+}
+
+
 // NewBlock creates a Block object from opaque data. It will hash the data.
 func NewBlock(data []byte) *BasicBlock {
 	// TODO: fix assumptions
